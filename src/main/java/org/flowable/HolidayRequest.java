@@ -2,6 +2,7 @@ package org.flowable;
 
 
 import org.flowable.engine.*;
+import org.flowable.engine.history.HistoricActivityInstance;
 import org.flowable.engine.impl.cfg.StandaloneProcessEngineConfiguration;
 import org.flowable.engine.repository.Deployment;
 import org.flowable.engine.repository.ProcessDefinition;
@@ -17,6 +18,9 @@ public class HolidayRequest {
 
     /**
      * http://www.flowable.org/docs/userguide/index.html#sources
+     *
+     * 2.3. Building a command-line application
+     *
      */
 
     public static void main(String[] args) {
@@ -73,7 +77,7 @@ public class HolidayRequest {
          * We now have the process definition deployed to the process engine, so process instances can be started using
          * this process definition as a blueprint.
           */
-        //Scanner scanner= new Scanner(System.in);  //java.util.Scanner
+        Scanner scanner= new Scanner(System.in);  //java.util.Scanner
         System.out.println("Who are you?");
         String employee = "Reto"; //scanner.nextLine();
         System.out.println("How many holidays do you want to request?");
@@ -126,6 +130,56 @@ public class HolidayRequest {
         Map<String, Object> processVariables = taskService.getVariables(task.getId());
         System.out.println(processVariables.get("employee") + " wants " +
                 processVariables.get("nrOfHolidays") + " of holidays. Do you approve this?");
+        System.out.println("6 **************************************************************************");
+
+        /**
+         * The manager can now complete the task. In reality, this often means that a form is submitted by the user.
+         * The data from the form is then passed as process variables. Here, we’ll mimic this by passing a map with
+         * the approved variable (the name is important, as it’s used later on in the conditions of the sequence flow!)
+         * when the task is completed
+         */
+        boolean approved = true; ///scanner.nextLine().toLowerCase().equals("y");
+        variables = new HashMap<String, Object>();
+        variables.put("approved", approved);
+        taskService.complete(task.getId(), variables);
+
+        /**
+         * There is a last piece of the puzzle still missing: we haven’t implemented the automatic logic that will get
+         * executed when the request is approved. In the BPMN 2.0 XML this is a service task and it looked above like:
+         * <serviceTask id="externalSystemCall" name="Enter holidays in external system"
+         *   flowable:class="org.flowable.CallExternalSystemDelegate"/>
+         * Klasse: CallExternalSystemDelegate
+         * @todo: Delegate Design Pattern?
+         */
+
+        /**
+         * 2.3.7. Working with historical data
+         * For example, suppose we want to show the duration of the process instance that we’ve been executing so far.
+         * To do this, we get the HistoryService from the ProcessEngine and create a query for historical activities.
+         * Running the example again, we now see something like this in the console:
+         *   startEvent took 1 milliseconds
+         *   approveTask took 2638 milliseconds
+         *   decision took 3 milliseconds
+         *   externalSystemCall took 1 milliseconds
+         */
+        HistoryService historyService = processEngine.getHistoryService();
+        List<HistoricActivityInstance> activities =
+                historyService.createHistoricActivityInstanceQuery()
+                        .processInstanceId(processInstance.getId())
+                        .finished()
+                        .orderByHistoricActivityInstanceEndTime().asc()
+                        .list();
+
+        for (HistoricActivityInstance activity : activities) {
+            System.out.println(activity.getActivityId() + " took "
+                    + activity.getDurationInMillis() + " milliseconds");
+        }
+        System.out.println("7 **************************************************************************");
+
+
+
+
+
     }
 
 }
