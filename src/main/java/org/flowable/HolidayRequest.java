@@ -1,19 +1,23 @@
 package org.flowable;
 
-import org.flowable.engine.ProcessEngine;
-import org.flowable.engine.ProcessEngineConfiguration;
-import org.flowable.engine.RepositoryService;
-import org.flowable.engine.RuntimeService;
+
+import org.flowable.engine.*;
 import org.flowable.engine.impl.cfg.StandaloneProcessEngineConfiguration;
 import org.flowable.engine.repository.Deployment;
 import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.runtime.ProcessInstance;
+import org.flowable.task.api.Task;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 public class HolidayRequest {
+
+    /**
+     * http://www.flowable.org/docs/userguide/index.html#sources
+     */
 
     public static void main(String[] args) {
 
@@ -99,6 +103,29 @@ public class HolidayRequest {
          * will stop executing anything further, returning the API call.
          */
 
+
+        /**
+         * To get the actual task list, we create a TaskQuery through the TaskService and we configure the query to only
+         * return the tasks for the managers group
+         */
+        TaskService taskService = processEngine.getTaskService();
+        List<Task> tasks = taskService.createTaskQuery().taskCandidateGroup("managers").list();
+        System.out.println("You have " + tasks.size() + " tasks:");
+        for (int i=0; i<tasks.size(); i++) {
+            System.out.println((i+1) + ") " + tasks.get(i).getName());
+        }
+        System.out.println("5 **************************************************************************");
+
+        /**
+         * Using the task identifier, we can now get the specific process instance variables and show on
+         * the screen the actual request
+         */
+        System.out.println("Which task would you like to complete?");
+        int taskIndex = Integer.valueOf("1"); //scanner.nextLine());
+        Task task = tasks.get(taskIndex - 1);
+        Map<String, Object> processVariables = taskService.getVariables(task.getId());
+        System.out.println(processVariables.get("employee") + " wants " +
+                processVariables.get("nrOfHolidays") + " of holidays. Do you approve this?");
     }
 
 }
