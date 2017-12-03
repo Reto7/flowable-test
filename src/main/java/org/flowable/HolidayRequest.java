@@ -14,7 +14,7 @@ public class HolidayRequest {
          * ProcessEngineConfiguration instance, which allows you to configure and tweak the settings for the process engine.
          * Often, the ProcessEngineConfiguration is created using a configuration XML file, but (as we do here) you can
          * also create it programmatically. The minimum configuration a ProcessEngineConfiguration needs is a JDBC connection
-         * to a database
+         * to a database.
          */
         ProcessEngineConfiguration cfg = new StandaloneProcessEngineConfiguration()
                 .setJdbcUrl("jdbc:h2:mem:flowable;DB_CLOSE_DELAY=-1")
